@@ -159,11 +159,11 @@ class MainActivity : AppCompatActivity() {
             val textboxContainer = findViewById<LinearLayout>(R.id.chatMessageBox)
             when (chatService!!.authState) {
                 ChatService.AuthState.FULL -> {
-                    textboxPlaceholder.visibility = View.INVISIBLE
+                    textboxPlaceholder.visibility = View.GONE
                     textboxContainer.visibility = View.VISIBLE
                 }
                 ChatService.AuthState.READONLY, ChatService.AuthState.FAILED -> { // TODO: different messages when readonly & so on
-                    textboxContainer.visibility = View.INVISIBLE
+                    textboxContainer.visibility = View.GONE
                     textboxPlaceholder.visibility = View.VISIBLE
                 }
             }
