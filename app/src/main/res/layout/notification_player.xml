@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ff424242" >
+D
+    <!--<ImageView
+        android:id="@+id/player_art"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="fitXY"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/ic_launcher"
+        android:layout_marginLeft="12dp" />-->
+
+    <ImageView
+        android:layout_width="8dp"
+        android:layout_height="match_parent"
+        android:background="#ff51065c" />
+
+    <TextView
+        android:id="@+id/player_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="top|left"
+        android:singleLine="true"
+        android:textColor="#ffffffff"
+        android:textSize="16dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="12dp"
+        android:text="Promise You Gave Me" />
+
+    <TextView
+        android:id="@+id/player_artist_and_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="top|left"
+        android:singleLine="true"
+        android:textColor="#ffd0d0d0"
+        android:textSize="14dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="34dp"
+        android:text="I Am Waiting for You Last Summer" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:gravity="center"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/player_pause"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:scaleType="center"
+            android:background="@drawable/highlight_selector"
+            android:src="@drawable/ic_pause_white_36dp" />
+
+        <ImageView
+            android:id="@+id/player_play"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:scaleType="center"
+            android:background="@drawable/highlight_selector"
+            android:src="@drawable/ic_play_arrow_white_36dp"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/player_close"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginRight="8dp"
+            android:scaleType="center"
+            android:background="@drawable/highlight_selector"
+            android:src="@drawable/ic_close_white_24dp" />
+
+    </LinearLayout>
+</RelativeLayout>

@@ -1,0 +1,59 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Provoda.ch</string>
+    <string name="news">News</string>
+    <string name="chat">Chat</string>
+    <string name="waitingForServer" tools:ignore="TypographyEllipsis">Waiting for server response...</string>
+    <string name="okay">Okay</string>
+
+    <string name="aboutTitle">About</string>
+    <string name="aboutMsg"><![CDATA[
+        idk what\'s that yet
+    ]]></string>
+
+    <string name="incorrectLoginTitle">Incorrect login</string>
+    <string name="incorrectLoginMsg">Ник должен содержать только цифры и латиницу. Длина его должна быть от 3 до 20 символов</string>
+
+    <string name="authSummary">Авторизация необходима чтобы писать в чат</string>
+    <string name="auth">Authorization</string>
+
+    <string name="lowstreamSummary">Low-speed stream saves your data charges</string>
+    <string name="lowstream">Low stream</string>
+
+    <string name="gui">GUI</string>
+
+    <string name="showBackground">Show background</string>
+    <string name="showBackgroundSummary">Background will be downloaded from the server</string>
+
+    <string name="logout">Log out</string>
+
+    <string name="loginSummary" tools:ignore="TypographyDashes">Latin and numbers only, 3-20 chars max</string>
+    <string name="login">Login</string>
+    <string name="player">Player</string>
+
+    <string name="info">Information</string>
+    <string name="vkErrorTitle">Internal VK error</string>
+    <string name="vkErrorMessage">An internal VK error occurred</string>
+    <string name="tryagain">Повторить</string>
+    <string name="cancel">Закрыть</string>
+    <string name="unexpectedAnswerTitle">Неожиданный ответ</string>
+    <string name="unexpectedAnswerMessage">An internal server error occurred</string>
+    <string name="connectionErrorTitle">Connection error</string>
+    <string name="connectionErrorMessage">Check your Internet connection</string>
+    <string name="playerConnectionError">Something wrong with Provoda.ch server</string>
+    <string name="playerFocusRequestError">Can\'t request audio focus</string>
+    <string name="trackVoted">Voted</string>
+    <string name="trackVoteAuthError">Auth error. Please reauthorize</string>
+    <string name="trackAlreadyVoted">Already voted</string>
+    <string name="trackRevoted">Revoted</string>
+    <string name="trackVoteServerError">Something wrong with server. Please try again later</string>
+    <string name="trackVoteNeedAuth">You should authorize to vote tracks</string>
+    <string name="picture">[pic]</string>
+    <string name="trackError">Track service is not available</string>
+    <string name="noTrack">No track info available</string>
+    <string name="authError">Authentication failed</string>
+    <string name="message_hint">Enter your message here</string>
+    <string name="auth_via_telegram">Authenticate via Telegram</string>
+    <string name="auth_via_url">Authenticate via Telegram</string>
+    <string name="authApiError">Error in authentication API</string>
+    <string name="notAuthorized">You are not authorized yet. Telegram only is supported for now</string>
+</resources>

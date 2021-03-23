@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.asterleen.provodach">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Provodach">
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleInstance"
+            android:process=":MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter android:label="@string/auth_via_telegram">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="api.nay.su"
+                    android:pathPrefix="/airin/authgram" />
+            </intent-filter>
+            <intent-filter android:label="@string/auth_via_url">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="telegram-auth"
+                    android:host="provodach" />
+            </intent-filter>
+
+        </activity>
+
+        <service
+            android:name=".PlayerService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":Player" />
+
+        <service
+            android:name=".ChatService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":MainActivity" />
+    </application>
+
+</manifest>
