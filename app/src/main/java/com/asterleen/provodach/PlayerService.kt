@@ -1,15 +1,21 @@
 package com.asterleen.provodach
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.un4seen.bass.BASS
 
 
@@ -78,7 +84,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
 
         BASS.BASS_SetConfig(BASS.BASS_CONFIG_NET_PREBUF, 0)
-        notification = PlayerNotification(this)
+        notification = PlayerNotification(this, getNotificationChannelId(NOTIFICATION_ID, NOTIFICATION_STR))
 
         Log.d(TAG, "PlayerService ready")
     }
@@ -114,6 +120,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         channel = BASS.BASS_StreamCreateURL(stream, 0, BASS.BASS_STREAM_AUTOFREE, null, null)
         if (channel == 0) {
             Toast.makeText(this@PlayerService, R.string.playerConnectionError, Toast.LENGTH_LONG).show()
+            Log.e(TAG, "BASS shows the error #" + BASS.BASS_ErrorGetCode())
             sendBroadcast(Intent(ACTION_STOP))
             stopSelf()
             return
@@ -143,6 +150,25 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
     }
 
+    private fun getNotificationChannelId(channelId: String, channelName: String): String {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel(channelId, channelName)
+        } else {
+            ""
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(channelId: String, channelName: String): String {
+        val chan = NotificationChannel(channelId,
+                channelName, NotificationManager.IMPORTANCE_DEFAULT)
+        chan.lightColor = Color.DKGRAY
+        chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(chan)
+        return channelId
+    }
+
     companion object {
         private const val TAG = "PlayerService"
         private const val STREAM = "https://station.waveradio.org/provodach"
@@ -152,5 +178,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         const val ACTION_STATE = "com.asterleen.provodach.player.STATE"
         const val ACTION_TERMINATE = "com.asterleen.provodach.player.TERMINATE"
         const val ACTION_TOKEN = "com.asterleen.provodach.player.TOKEN"
+
+        const val NOTIFICATION_ID = "provodach_player"
+        const val NOTIFICATION_STR = "Provoda.ch Player"
     }
 }

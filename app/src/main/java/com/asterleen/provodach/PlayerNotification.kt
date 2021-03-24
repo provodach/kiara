@@ -2,11 +2,16 @@ package com.asterleen.provodach
 
 
 import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.koushikdutta.async.http.AsyncHttpClient
 import com.koushikdutta.async.http.AsyncHttpGet
@@ -26,7 +31,7 @@ import java.util.*
  * Самостоятельно обновляет текущий трек с сервера.
  *
  * Использует кастомное оповещение.  */
-class PlayerNotification(private val player: PlayerService) {
+class PlayerNotification(private val player: PlayerService, private val notificationId: String) {
     private val timer: Timer
     private val notification: Notification
     var isPlaying = false
@@ -65,12 +70,12 @@ class PlayerNotification(private val player: PlayerService) {
 
     companion object {
         private const val NOTIFICATION_ID = 1337
-        private const val NOTIFICATION_STR = "provodach"
         private const val TRACK_SOURCE_URL = "https://core.waveradio.org/public/current?station=provodach"
     }
 
     init {
         val contentView = RemoteViews(player.application.packageName, R.layout.notification_player)
+
         val deleteIntent = PendingIntent.getBroadcast(
                 player, 1, Intent(PlayerService.ACTION_TERMINATE), PendingIntent.FLAG_UPDATE_CURRENT)
         contentView.setOnClickPendingIntent(R.id.player_play, PendingIntent.getBroadcast(
@@ -78,7 +83,7 @@ class PlayerNotification(private val player: PlayerService) {
         contentView.setOnClickPendingIntent(R.id.player_pause, PendingIntent.getBroadcast(
                 player, 3, Intent(PlayerService.ACTION_STOP), PendingIntent.FLAG_UPDATE_CURRENT))
         contentView.setOnClickPendingIntent(R.id.player_close, deleteIntent)
-        notification = NotificationCompat.Builder(player, NOTIFICATION_STR) // .setWhen(0)
+        notification = NotificationCompat.Builder(player, notificationId) // .setWhen(0)
                 .setOngoing(true)
                 .setCustomContentView(contentView)
                 .setContentTitle("Provoda.ch")
@@ -87,6 +92,7 @@ class PlayerNotification(private val player: PlayerService) {
                 .setContentIntent(PendingIntent.getActivity(player, 0, Intent(player, MainActivity::class.java), 0))
                 .setDeleteIntent(deleteIntent)
                 .build()
+
         timer = Timer()
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
