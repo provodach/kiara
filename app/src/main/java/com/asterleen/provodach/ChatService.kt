@@ -29,6 +29,7 @@ class ChatService (): Service() {
 
     var listener: ChatListener? = null
     var authCode: String? = null
+    var userName: String = ""
     var authState: AuthState = AuthState.NONE
     private var myMessagesIds: ArrayList<String> = ArrayList<String>()
     private var socket : WebSocket? = null
@@ -76,6 +77,7 @@ class ChatService (): Service() {
                                     updateAuthState(AuthState.READONLY)
                                 } else {
                                     updateAuthState(AuthState.FULL)
+                                    setName(userName)
                                 }
                             }
                             "FAIL" -> {
@@ -96,15 +98,29 @@ class ChatService (): Service() {
 
                     //    0      1        2          3        4    fullText
                     // LOGCON 122263 1612543588 silentchan fadd74 #Привет снова, есть живые?
-                    "CONTENT", "LOGCON" -> {
-                        listener?.messageReceived(ChatMessage(
-                                id = cmd[1].toInt(),
-                                timestamp = cmd[2].toLong(),
-                                name = cmd[3],
-                                hash = cmd[4],
-                                content = SpannableStringBuilder(fullText),
-                                forMe = false
-                        ))
+                    "CONTENT", "LOGCON", "SERVICE" -> {
+                        val message: ChatMessage =
+                            if (cmd[0] == "SERVICE") {
+                                ChatMessage(
+                                    id = 0,
+                                    timestamp = 0L,
+                                    name = "*AirinService*",
+                                    hash = serviceCodeToColor(cmd[1]),
+                                    content = SpannableStringBuilder(fullText),
+                                    forMe = false
+                                )
+                            } else {
+                                ChatMessage(
+                                    id = cmd[1].toInt(),
+                                    timestamp = cmd[2].toLong(),
+                                    name = cmd[3],
+                                    hash = cmd[4],
+                                    content = SpannableStringBuilder(fullText),
+                                    forMe = false
+                                )
+                            }
+
+                        listener?.messageReceived(message)
                     }
 
                     // CONREC uydrgdsjtxjiferdhopq 122542
@@ -119,6 +135,15 @@ class ChatService (): Service() {
             webSocket.closedCallback = CompletedCallback { }
         })
         super.onCreate()
+    }
+
+    private fun serviceCodeToColor(code: String): String {
+        return when (code) {
+            "INFO" -> "4ac9ff"
+            "WARNING" -> "ffff4a"
+            "ERROR" -> "ff051e"
+            else -> "f5f5f5"
+        }
     }
 
     private fun updateAuthState(state: AuthState, comment: String? = null) {
@@ -148,6 +173,13 @@ class ChatService (): Service() {
         }
 
         Log.d(TAG, "Socket service stopped")
+    }
+
+    fun setName(name: String = "") {
+        userName = name
+
+        if (authState == AuthState.FULL)
+            socketSend("IAM #$name")
     }
 
     fun sendMessage(message: String) : Boolean {

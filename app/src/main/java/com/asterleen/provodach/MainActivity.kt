@@ -1,12 +1,7 @@
 package com.asterleen.provodach
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
+
 import android.content.*
-import android.graphics.Color
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -16,17 +11,17 @@ import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ListView
-import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.asterleen.provodach.ui.VKAuthActivity
 import com.koushikdutta.async.http.AsyncHttpClient
 import com.koushikdutta.async.http.AsyncHttpGet
 import com.koushikdutta.async.http.AsyncHttpResponse
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.regex.Matcher
 import java.util.regex.Pattern
+import android.content.Intent
+import androidx.preference.PreferenceManager;
 
 
 class MainActivity : AppCompatActivity() {
@@ -51,6 +46,7 @@ class MainActivity : AppCompatActivity() {
             chatService = binder.getService()
             chatService!!.listener = this
             chatService!!.authCode = authCode
+            chatService!!.setName(prefs.getString("user_name", "")!!)
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -81,33 +77,64 @@ class MainActivity : AppCompatActivity() {
         override fun error(code: Int, text: String) {}
     }
 
+    private val vkAuthActivity = object : VKAuthActivity() {
+        override fun authCodeReady(url: String) {
+            authBy(AuthWays.VK, extractAuthCodeFromURL(url))
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        prefs = getPreferences(Context.MODE_PRIVATE)
+        prefs = PreferenceManager.getDefaultSharedPreferences(this)
+
 
         val playerReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent) {
-                val button: MenuItem = menu!!.findItem(R.id.appbar_play)
+                val playerButton: MenuItem = menu!!.findItem(R.id.appbar_play)
                 when (intent.action) {
                     PlayerService.ACTION_PLAY -> {
-                        button.isChecked = true
-                        button.setIcon(R.drawable.ic_pause_white_36dp)
+                        playerButton.isChecked = true
+                        playerButton.setIcon(R.drawable.ic_pause_white_36dp)
                     }
                     PlayerService.ACTION_STOP, PlayerService.ACTION_TERMINATE -> {
-                        button.isChecked = false
-                        button.setIcon(R.drawable.ic_play_arrow_white_36dp)
+                        playerButton.isChecked = false
+                        playerButton.setIcon(R.drawable.ic_play_arrow_white_36dp)
                     }
                 }
             }
         }
 
-        val actionFilter = IntentFilter()
-        actionFilter.addAction(PlayerService.ACTION_PLAY)
-        actionFilter.addAction(PlayerService.ACTION_STOP)
-        actionFilter.addAction(PlayerService.ACTION_TERMINATE)
-        registerReceiver(playerReceiver, actionFilter)
+        val playerActionFilter = IntentFilter()
+        playerActionFilter.addAction(PlayerService.ACTION_PLAY)
+        playerActionFilter.addAction(PlayerService.ACTION_STOP)
+        playerActionFilter.addAction(PlayerService.ACTION_TERMINATE)
+        registerReceiver(playerReceiver, playerActionFilter)
+
+
+        val prefsChangeReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent) {
+                when (intent.action) {
+                    SettingsActivity.ACTION_UPDATE_HLS -> {
+                        prefs.edit().putBoolean("use_hls", intent.extras?.getBoolean("use_hls") == true).apply()
+
+                        val playerButton: MenuItem = menu!!.findItem(R.id.appbar_play)
+                        if (playerButton.isChecked)
+                            restartPlayer(if (intent.extras?.getBoolean("use_hls") == true) "hls" else "stream")
+                    }
+                    SettingsActivity.ACTION_UPDATE_NAME -> {
+                        prefs.edit().putString("user_name", intent.extras?.getString("user_name")).apply()
+                        chatService?.setName(prefs.getString("user_name", "")!!);
+                    }
+                }
+            }
+        }
+
+        val prefsActionFilter = IntentFilter()
+        prefsActionFilter.addAction(SettingsActivity.ACTION_UPDATE_HLS)
+        prefsActionFilter.addAction(SettingsActivity.ACTION_UPDATE_NAME)
+        registerReceiver(prefsChangeReceiver, prefsActionFilter)
 
         messagesAdapter = ChatMessageAdapter(this@MainActivity)
         messages = findViewById<ListView>(R.id.messages)
@@ -116,13 +143,14 @@ class MainActivity : AppCompatActivity() {
         messagesAdapter!!.listView = messages
         messages!!.adapter = messagesAdapter
 
-        authCode = getPref("auth_code")
+        authCode = prefs.getString("auth_code", null)
 
         if (intent != null)
             processAuthIntent(intent)
         else
             startChatService(authCode)
     }
+
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -140,23 +168,30 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.appbar_play -> {
-                if (item.isChecked) stopService(Intent(this, PlayerService::class.java)) else restartPlayer()
+                if (item.isChecked) stopService(Intent(this, PlayerService::class.java)) else
+                    restartPlayer(if (prefs.getBoolean("use_hls", false)) "hls" else "stream")
                 return true
             }
-            /*R.id.appbar_settings -> {
-                startActivityForResult(Intent(this, SettingsActivity::class.java), SETTINGS_PLS)
-                return true
-            } */
 
             R.id.appbar_settings -> {
-                Toast.makeText(this@MainActivity, "Code: " + getPref("auth_code"), Toast.LENGTH_SHORT).show()
+                openSettings()
+                return true
             }
+
+            /*R.id.appbar_settings -> {
+                Toast.makeText(this@MainActivity, "Code: " + getPref("auth_code"), Toast.LENGTH_SHORT).show()
+            }*/
         }
         return super.onOptionsItemSelected(item)
     }
 
     fun onMessageSendButtonClick(view: View) {
         chatService?.sendMessage(messageTextEdit?.text.toString())
+    }
+
+    private fun openSettings() {
+        val intent = Intent(this@MainActivity, SettingsActivity::class.java)
+        startActivity(intent)
     }
 
     private fun updateTextboxState() {
@@ -182,7 +217,7 @@ class MainActivity : AppCompatActivity() {
         if (intentURI != null && intentURI.isNotEmpty()) {
             authBy(AuthWays.TELEGRAM, extractAuthCodeFromURL(intentURI))
         } else {
-            startChatService(getPref("auth_code"))
+            startChatService(prefs.getString("auth_code", null))
         }
     }
 
@@ -214,7 +249,7 @@ class MainActivity : AppCompatActivity() {
                         when (status) {
                             0 -> {
                                 authCode = payload
-                                setPref("auth_code", payload)
+                                setPrefString("auth_code", payload)
 
                                 startChatService(authCode)
                             }
@@ -244,19 +279,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun restartPlayer() {
+    private fun startPlayer(streamType: String = "stream") {
         val intent = Intent(this, PlayerService::class.java)
-        stopService(intent)
+        val b = Bundle()
+        b.putString("stream", streamType)
+        intent.putExtras(b)
+
         startService(intent)
     }
 
-    private fun getPref(key: String, default: String? = null) : String? {
-        return prefs.getString("com.asterleen.provodach.prefs.$key", default)
+    private fun restartPlayer(streamType: String = "stream") {
+        val intent = Intent(this, PlayerService::class.java)
+        stopService(intent)
+        startPlayer(streamType)
     }
 
-    private fun setPref(key: String, value: String) {
+    private fun setPrefString(key: String, value: String) {
         with (prefs.edit()) {
-            putString("com.asterleen.provodach.prefs.$key", value)
+            putString(key, value)
             apply()
         }
     }

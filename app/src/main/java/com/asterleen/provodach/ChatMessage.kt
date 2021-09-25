@@ -5,13 +5,14 @@ import java.time.LocalDate
 import java.util.*
 import java.text.SimpleDateFormat
 
-class ChatMessage(val id: Int, private val timestamp: Long,
+class ChatMessage(val id: Int, val timestamp: Long,
                   val name: String, val hash: String, val content: SpannableStringBuilder, val forMe: Boolean) {
 
     var prepared = false
     var selected = false
     var date : String = ""
     var time : String = ""
+    var isServiceMessage : Boolean = false
     private var dateObject: Date? = null
 
     init {

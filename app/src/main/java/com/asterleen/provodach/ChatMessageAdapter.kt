@@ -21,6 +21,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import com.asterleen.provodach.ui.MessageLinkSpan
 import com.asterleen.provodach.ui.SpoilerSpan
 import com.asterleen.provodach.ui.UrlSpan
@@ -235,9 +236,10 @@ class ChatMessageAdapter(context: Context) : ArrayAdapter<ChatMessage?>(context,
             convertView.tag = holder
         } else holder = convertView.tag as ViewHolder
         val message: ChatMessage? = getItem(position)
-        holder.name!!.text = "[" + message?.id.toString() + "] " + message?.name
+        holder.name!!.text = (if (message?.id == 0) "" else "[" + message?.id.toString() + "] ") + message?.name
         holder.name!!.setTextColor(Color.parseColor('#' + message?.hash.toString()))
         holder.datetime!!.text = message?.time
+        holder.datetime!!.isVisible = message?.timestamp != 0L
 
         /* Пиздец, сука. ЕГО ДЕЙСТВИТЕЛЬНО НАДО КАЖДЫЙ РАЗ ПАРСИТЬ БЛЯТЬ!!!111
         * (самое обидное, что я даже не могу узнать когда создается новый view)

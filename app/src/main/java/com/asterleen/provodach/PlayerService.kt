@@ -17,6 +17,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.un4seen.bass.BASS
+import com.un4seen.bass.BASSHLS
 
 
 /**
@@ -66,7 +67,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         actionFilter.addAction(ACTION_STOP)
         actionFilter.addAction(ACTION_STATE)
         actionFilter.addAction(ACTION_TERMINATE)
-        actionFilter.addAction(ACTION_TOKEN)
         registerReceiver(actionReceiver, actionFilter)
         if ((getSystemService(Context.AUDIO_SERVICE) as AudioManager)
                         .requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
@@ -100,13 +100,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        stream = if (intent.getBooleanExtra("lowstream", false)) STREAM_LOW else STREAM
+        val streamType = intent.getStringExtra("stream")
+        stream = when(streamType) {
+            "hls" -> STREAM_HLS
+            "low" -> STREAM_LOW
+            else -> STREAM
+        }
+
         token = intent.getStringExtra("token")
 
-        // Log.d(TAG, stream);
+        Log.d(TAG, "Requested service start with $streamType stream type");
         notification?.setPlaying(true)?.update()
         sendBroadcast(Intent(ACTION_PLAY))
-        start(stream)
+        start(stream, streamType == "hls")
         return START_NOT_STICKY
     }
 
@@ -114,10 +120,18 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         return null
     }
 
-    private fun start(stream: String?) {
+    private fun start(stream: String?, useHLS: Boolean = false) {
         if (BASS.BASS_ChannelIsActive(channel) == BASS.BASS_ACTIVE_PLAYING && stream == this.stream) return
         BASS.BASS_StreamFree(channel)
-        channel = BASS.BASS_StreamCreateURL(stream, 0, BASS.BASS_STREAM_AUTOFREE, null, null)
+
+        Log.d(TAG, "HLS usage flag: $useHLS, Stream: $stream")
+
+        channel = if (useHLS)
+            BASSHLS.BASS_HLS_StreamCreateURL(stream, BASS.BASS_STREAM_AUTOFREE, null, null)
+        else
+            BASS.BASS_StreamCreateURL(stream, 0, BASS.BASS_STREAM_AUTOFREE, null, null)
+
+
         if (channel == 0) {
             Toast.makeText(this@PlayerService, R.string.playerConnectionError, Toast.LENGTH_LONG).show()
             Log.e(TAG, "BASS shows the error #" + BASS.BASS_ErrorGetCode())
@@ -173,11 +187,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         private const val TAG = "PlayerService"
         private const val STREAM = "https://station.waveradio.org/provodach"
         private const val STREAM_LOW = "https://station.waveradio.org/provodach-low"
+        private const val STREAM_HLS = "https://station.waveradio.org/hls/provodach/provodach.m3u8"
         const val ACTION_PLAY = "com.asterleen.provodach.player.PLAY"
         const val ACTION_STOP = "com.asterleen.provodach.player.STOP"
         const val ACTION_STATE = "com.asterleen.provodach.player.STATE"
         const val ACTION_TERMINATE = "com.asterleen.provodach.player.TERMINATE"
-        const val ACTION_TOKEN = "com.asterleen.provodach.player.TOKEN"
 
         const val NOTIFICATION_ID = "provodach_player"
         const val NOTIFICATION_STR = "Provoda.ch Player"

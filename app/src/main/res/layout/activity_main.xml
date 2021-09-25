@@ -60,16 +60,17 @@
                     android:hint="@string/message_hint"
                     />
 
-                <Button
-                    android:layout_width="45dp"
-                    android:layout_height="wrap_content"
-                    android:onClick="onMessageSendButtonClick"
-                    android:text=">"
+                <ImageButton
                     android:id="@+id/sendMessage"
-
+                    android:layout_width="48dp"
+                    android:layout_height="match_parent"
                     android:minWidth="0dp"
+
                     android:minHeight="0dp"
-                    style="@style/Widget.AppCompat.Button.Borderless" />
+                    android:onClick="onMessageSendButtonClick"
+                    android:src="@drawable/ic_send"
+                    tools:src="@drawable/ic_send"
+                    style="@style/Widget.AppCompat.Button.Borderless"/>
             </LinearLayout>
 
             <LinearLayout
