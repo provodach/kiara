@@ -54,7 +54,7 @@
     <string name="auth_via_telegram">Authenticate via Telegram</string>
     <string name="auth_via_url">Authenticate via URL</string>
     <string name="authApiError">Error in authentication API</string>
-    <string name="notAuthorized">You are not authorized yet. Telegram only is supported for now</string>
+    <string name="notAuthorized">You are not authorized yet.\nTelegram only is supported for now.\nPress here to open the auth bot...</string>
     <string name="useHLS">Use HLS stream</string>
     <string name="useHLSExplanation">Use HLS stream instead of direct HTTP. Decreases stutters, increases lag</string>
     <string name="settings">Settings</string>

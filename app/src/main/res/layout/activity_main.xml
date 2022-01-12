@@ -78,8 +78,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp">
+                android:onClick="onChatMessagePlaceholderClick"
+                android:padding="10dp">
 
                 <TextView
                     android:layout_width="match_parent"

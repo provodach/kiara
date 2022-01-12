@@ -21,6 +21,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.regex.Pattern
 import android.content.Intent
+import android.net.Uri
 import androidx.preference.PreferenceManager;
 
 
@@ -187,6 +188,13 @@ class MainActivity : AppCompatActivity() {
 
     fun onMessageSendButtonClick(view: View) {
         chatService?.sendMessage(messageTextEdit?.text.toString())
+    }
+
+    fun onChatMessagePlaceholderClick(view: View) {
+        val url = "https://t.me/provodach_bot"
+        val i = Intent(Intent.ACTION_VIEW)
+        i.data = Uri.parse(url)
+        startActivity(i)
     }
 
     private fun openSettings() {

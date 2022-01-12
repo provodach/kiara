@@ -50,7 +50,7 @@
     <string name="auth_via_telegram">Войти через Telegram</string>
     <string name="auth_via_url">Войти по URL</string>
     <string name="authApiError">Ошибка в API авторизации</string>
-    <string name="notAuthorized">Вы не авторизованы. Пока что поддерживается только через Telegram</string>
+    <string name="notAuthorized">Вы не авторизованы. \nСейчас поддерживается только Telegram.\nНажмите здесь, чтобы авторизоваться...</string>
     <string name="useHLS">Использовать HLS</string>
     <string name="settings">Настройки</string>
     <string name="userName">Имя</string>
