@@ -34,6 +34,10 @@ import java.util.*
 class PlayerNotification(private val player: PlayerService, private val notificationId: String) {
     private val timer: Timer
     private val notification: Notification
+
+    private var currentArtist: String? = ""
+    private var currentTitle: String? = ""
+
     var isPlaying = false
         private set
     fun setPlaying(playing: Boolean): PlayerNotification {
@@ -66,6 +70,17 @@ class PlayerNotification(private val player: PlayerService, private val notifica
     fun remove() {
         timer.cancel()
         player.stopForeground(true)
+    }
+
+    fun setNotificationTitle(artist: String?, title: String?) {
+
+        if (artist != currentArtist || title != currentTitle) {
+            currentArtist = artist
+            currentTitle = title
+            getNotificationView().setTextViewText(R.id.player_title, title)
+            getNotificationView().setTextViewText(R.id.player_artist_and_status, artist)
+        }
+
     }
 
     companion object {
@@ -103,23 +118,19 @@ class PlayerNotification(private val player: PlayerService, private val notifica
                                 val status = try {
                                     result.getInt("status")
                                 } catch (ex: JSONException) {
-                                    getNotificationView().setTextViewText(R.id.player_title, null)
-                                    getNotificationView().setTextViewText(R.id.player_artist_and_status, R.string.trackError.toString())
+                                    setNotificationTitle(R.string.trackError.toString(), null)
                                 } catch (ex: NullPointerException) {
-                                    getNotificationView().setTextViewText(R.id.player_title, null)
-                                    getNotificationView().setTextViewText(R.id.player_artist_and_status, R.string.trackError.toString())
+                                    setNotificationTitle(R.string.trackError.toString(), null)
                                 }
 
                                 when (status) {
                                     0 -> {
                                         // assume that everything is okay and just set the artist & title
                                         val payload = result.getJSONObject("payload")
-                                        getNotificationView().setTextViewText(R.id.player_artist_and_status, payload.getString("artist"))
-                                        getNotificationView().setTextViewText(R.id.player_title, payload.getString("title"))
+                                        setNotificationTitle(payload.getString("artist"), payload.getString("title"))
                                     }
                                     else -> {
-                                        getNotificationView().setTextViewText(R.id.player_title, null)
-                                        getNotificationView().setTextViewText(R.id.player_artist_and_status, R.string.noTrack.toString())
+                                        setNotificationTitle(R.string.noTrack.toString(), null)
                                     }
                                 }
                                 update()
