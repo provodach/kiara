@@ -1,0 +1,63 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Provoda.ch</string>
+    <string name="news">Новости</string>
+    <string name="chat">Чат</string>
+    <string name="waitingForServer" tools:ignore="TypographyEllipsis">Ожидаю ответа сервера...</string>
+    <string name="okay">Ясно</string>
+
+    <string name="aboutTitle">О приложении</string>
+    <string name="aboutMsg"><![CDATA[
+        idk what\'s that yet
+    ]]></string>
+
+    <string name="incorrectLoginTitle">Неправильный ник</string>
+    <string name="incorrectLoginMsg">Ник должен содержать только цифры и латиницу. Длина его должна быть от 3 до 20 символов</string>
+
+    <string name="authSummary">Авторизация необходима чтобы писать в чат</string>
+    <string name="auth">Авторизация</string>
+
+    <string name="lowstreamSummary">Низкоскоростной поток использует меньше данных</string>
+    <string name="lowstream">Низкоскоростной поток</string>
+
+    <string name="gui">Интерфейс</string>
+
+    <string name="showBackground">Показывать фон</string>
+    <string name="showBackgroundSummary">Фоны будут загружены с сервера</string>
+
+    <string name="logout">Выйти</string>
+
+    <string name="login">Войти</string>
+    <string name="player">Проигрыватель</string>
+
+    <string name="info">Информация</string>
+    <string name="vkErrorTitle">Ошибка ВК</string>
+    <string name="vkErrorMessage">Случилась внутренняя ошибка ВК</string>
+    <string name="tryagain">Повторить</string>
+    <string name="cancel">Закрыть</string>
+    <string name="unexpectedAnswerTitle">Неожиданный ответ</string>
+    <string name="connectionErrorTitle">Проблемы с соединением</string>
+    <string name="connectionErrorMessage">Не удаётся подключиться: проблемы с соединением или сервером</string>
+    <string name="playerConnectionError">Сервер Проводача немного устал</string>
+    <string name="playerFocusRequestError">Не могу запросить аудиофокус</string>
+    <string name="trackVoted">Проголосовали</string>
+    <string name="trackVoteAuthError">Ошибка авторизации, попробуйте ещё раз</string>
+    <string name="trackAlreadyVoted">Уже проголосовали</string>
+    <string name="trackRevoted">Переголосовали</string>
+    <string name="trackVoteServerError">Серверу поплохело, попробуйте позже</string>
+    <string name="noTrack">Нет названия трека</string>
+    <string name="authError">Ошибка авторизации</string>
+    <string name="message_hint">Вводи сообщение здесь</string>
+    <string name="auth_via_telegram">Войти через Telegram</string>
+    <string name="auth_via_url">Войти по URL</string>
+    <string name="authApiError">Ошибка в API авторизации</string>
+    <string name="notAuthorized">Вы не авторизованы. Пока что поддерживается только через Telegram</string>
+    <string name="useHLS">Использовать HLS</string>
+    <string name="settings">Настройки</string>
+    <string name="userName">Имя</string>
+    <string name="userNameExplanation">Это имя будет использовано в чате</string>
+    <string name="loginSummary">От 3 до 20 букв или цифр</string>
+    <string name="unexpectedAnswerMessage">Случилась внутренняя ошибка сервера</string>
+    <string name="trackVoteNeedAuth">Для голосования нужна авторизация</string>
+    <string name="trackError">Сервис треков не отвечает</string>
+    <string name="useHLSExplanation">Использовать HLS вместо прямого подключения. Уменьшает заикания, повышает задержку</string>
+</resources>
