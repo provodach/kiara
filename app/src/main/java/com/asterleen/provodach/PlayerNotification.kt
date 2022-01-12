@@ -2,17 +2,17 @@ package com.asterleen.provodach
 
 
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.graphics.Color
-import android.os.Build
-import android.view.View
-import android.widget.RemoteViews
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.MediaMetadataCompat
+import androidx.media.app.NotificationCompat.MediaStyle
+
+import android.app.PendingIntent
+import android.content.Intent
+
+import android.support.v4.media.session.PlaybackStateCompat
+
 import com.koushikdutta.async.http.AsyncHttpClient
 import com.koushikdutta.async.http.AsyncHttpGet
 import com.koushikdutta.async.http.AsyncHttpResponse
@@ -21,19 +21,14 @@ import org.json.JSONObject
 import java.util.*
 
 /**
+ *
  * Created by Alex on 19.07.2016.
  *
- * Оповещение плеера *
- *
- * Класс для работы с оповещением. Предоставляет удобный интерфейс через методы update() и
- * setPlaying(boolean). Так же выполняет функцию обработчика кнопок класс и дискласс (вынести).
- *
- * Самостоятельно обновляет текущий трек с сервера.
- *
- * Использует кастомное оповещение.  */
+ * */
 class PlayerNotification(private val player: PlayerService, private val notificationId: String) {
     private val timer: Timer
     private val notification: Notification
+    private val mediaSession: MediaSessionCompat
 
     private var currentArtist: String? = ""
     private var currentTitle: String? = ""
@@ -45,25 +40,28 @@ class PlayerNotification(private val player: PlayerService, private val notifica
         return this
     }
 
-    fun getNotificationView() : RemoteViews {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Notification.Builder.recoverBuilder(player, notification).createContentView()
-        } else {
-            notification.contentView
-        }
-    }
 
     fun update(): PlayerNotification {
         if (isPlaying) {
-            getNotificationView().setViewVisibility(R.id.player_pause, View.VISIBLE)
-            getNotificationView().setViewVisibility(R.id.player_play, View.GONE)
             player.startForeground(NOTIFICATION_ID, notification)
         } else {
-            getNotificationView().setViewVisibility(R.id.player_pause, View.GONE)
-            getNotificationView().setViewVisibility(R.id.player_play, View.VISIBLE)
             player.startForeground(NOTIFICATION_ID, notification)
             player.stopForeground(false)
         }
+
+        mediaSession.setPlaybackState(
+            PlaybackStateCompat.Builder()
+                .setState(
+                    if (isPlaying)
+                        PlaybackStateCompat.STATE_PLAYING
+                    else PlaybackStateCompat.STATE_STOPPED, 0, 0F
+                )
+                .setActions(if (isPlaying)
+                    PlaybackStateCompat.ACTION_STOP
+                    else PlaybackStateCompat.ACTION_PLAY)
+                .build()
+        )
+
         return this
     }
 
@@ -75,10 +73,20 @@ class PlayerNotification(private val player: PlayerService, private val notifica
     fun setNotificationTitle(artist: String?, title: String?) {
 
         if (artist != currentArtist || title != currentTitle) {
-            currentArtist = artist
-            currentTitle = title
-            getNotificationView().setTextViewText(R.id.player_title, title)
-            getNotificationView().setTextViewText(R.id.player_artist_and_status, artist)
+
+            mediaSession.setMetadata(
+                MediaMetadataCompat.Builder()
+
+                    // Title.
+                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+
+                    // Artist.
+                    // Could also be the channel name or TV series.
+                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+
+                    .build()
+
+            )
         }
 
     }
@@ -89,24 +97,30 @@ class PlayerNotification(private val player: PlayerService, private val notifica
     }
 
     init {
-        val contentView = RemoteViews(player.application.packageName, R.layout.notification_player)
 
         val deleteIntent = PendingIntent.getBroadcast(
                 player, 1, Intent(PlayerService.ACTION_TERMINATE), PendingIntent.FLAG_UPDATE_CURRENT)
-        contentView.setOnClickPendingIntent(R.id.player_play, PendingIntent.getBroadcast(
-                player, 2, Intent(PlayerService.ACTION_PLAY), PendingIntent.FLAG_UPDATE_CURRENT))
-        contentView.setOnClickPendingIntent(R.id.player_pause, PendingIntent.getBroadcast(
-                player, 3, Intent(PlayerService.ACTION_STOP), PendingIntent.FLAG_UPDATE_CURRENT))
-        contentView.setOnClickPendingIntent(R.id.player_close, deleteIntent)
+
+        mediaSession = MediaSessionCompat(player.applicationContext, "PlayerService")
+        mediaSession.isActive = true
+
+        val closeAction: NotificationCompat.Action? = NotificationCompat.Action.Builder(
+            R.drawable.ic_close_white_36dp, "Close", deleteIntent
+        ).build()
+
         notification = NotificationCompat.Builder(player, notificationId) // .setWhen(0)
-                .setOngoing(true)
-                .setCustomContentView(contentView)
                 .setContentTitle("Provoda.ch")
                 .setSmallIcon(R.drawable.ic_play_arrow_white_36dp)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setContentIntent(PendingIntent.getActivity(player, 0, Intent(player, MainActivity::class.java), 0))
                 .setDeleteIntent(deleteIntent)
+                .setStyle(
+                    MediaStyle()
+                        .setMediaSession(mediaSession.sessionToken)
+                        .setShowActionsInCompactView(0))
+                .addAction(closeAction)
+
                 .build()
+
+
 
         timer = Timer()
         timer.scheduleAtFixedRate(object : TimerTask() {
@@ -133,7 +147,6 @@ class PlayerNotification(private val player: PlayerService, private val notifica
                                         setNotificationTitle(R.string.noTrack.toString(), null)
                                     }
                                 }
-                                update()
                             }
                         })
             }
