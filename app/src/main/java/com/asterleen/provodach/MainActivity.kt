@@ -14,11 +14,9 @@ import android.widget.ListView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.asterleen.provodach.ui.VKAuthActivity
-import com.koushikdutta.async.http.AsyncHttpClient
-import com.koushikdutta.async.http.AsyncHttpGet
-import com.koushikdutta.async.http.AsyncHttpResponse
-import org.json.JSONException
-import org.json.JSONObject
+import com.asterleen.provodach.ui.TelegramAuthViewModel
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import android.content.Intent
 import android.net.Uri
 import androidx.preference.PreferenceManager;
@@ -31,21 +29,25 @@ class MainActivity : AppCompatActivity() {
     private var authCode: String? = null
     private var messageTextEdit: EditText? = null
     private lateinit var prefs: SharedPreferences
+    private lateinit var telegramAuth: TelegramAuthViewModel
 
     var chatService : ChatService? = null
-
-    enum class AuthWays {
-        TELEGRAM,
-        VK
-    }
 
     private val chatConnection = object : ServiceConnection, ChatListener {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             val binder = service as ChatService.ChatBinder
-            chatService = binder.getService()
-            chatService!!.listener = this
-            chatService!!.authCode = authCode
-            chatService!!.setName(prefs.getString("user_name", "")!!)
+            val service = binder.getService()
+            chatService = service
+            service.listener = this
+            service.setName(prefs.getString("user_name", "")!!)
+            val token = authCode
+            if (token != null && (service.authCode != token ||
+                    service.authState == ChatService.AuthState.READONLY ||
+                    service.authState == ChatService.AuthState.FAILED)) {
+                service.reauth(token)
+            }
+            // AUTH may have arrived before this Activity attached its listener.
+            updateTextboxState()
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -143,6 +145,20 @@ class MainActivity : AppCompatActivity() {
         messages!!.adapter = messagesAdapter
 
         authCode = prefs.getString("auth_code", null)
+        telegramAuth = ViewModelProvider(this).get(TelegramAuthViewModel::class.java)
+        telegramAuth.result.observe(this, Observer { result ->
+            when {
+                result.token != null -> {
+                    authCode = result.token
+                    startChatService(authCode)
+                }
+                result.error != null -> AlertDialog.Builder(this)
+                    .setTitle(R.string.authError)
+                    .setMessage(getString(R.string.authApiError) + ":\n" + result.error)
+                    .show()
+            }
+            if (result.token != null || result.error != null) telegramAuth.consumeResult()
+        })
 
         if (intent != null)
             processAuthIntent(intent)
@@ -197,7 +213,10 @@ class MainActivity : AppCompatActivity() {
                 if (which == 0) {
                     startActivity(Intent(this, VKAuthActivity::class.java))
                 } else {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/provodach_bot")))
+                    val botUri = Uri.parse("https://t.me/provodach_bot").buildUpon()
+                        .appendQueryParameter("text", "/passme")
+                        .build()
+                    startActivity(Intent(Intent.ACTION_VIEW, botUri))
                 }
             }
             .show()
@@ -213,7 +232,10 @@ class MainActivity : AppCompatActivity() {
             val textboxPlaceholder = findViewById<LinearLayout>(R.id.chatMessagePlaceholder)
             val textboxContainer = findViewById<LinearLayout>(R.id.chatMessageBox)
             when (chatService!!.authState) {
-                ChatService.AuthState.NONE -> Unit
+                ChatService.AuthState.NONE -> {
+                    textboxContainer.visibility = View.GONE
+                    textboxPlaceholder.visibility = View.VISIBLE
+                }
                 ChatService.AuthState.FULL -> {
                     textboxPlaceholder.visibility = View.GONE
                     textboxContainer.visibility = View.VISIBLE
@@ -234,50 +256,14 @@ class MainActivity : AppCompatActivity() {
                 uri.path == "/airin/authgram")
             if (isTelegramCallback) {
                 val code = uri.getQueryParameter("code")
-                if (code?.matches(Regex("[a-z0-9]{32}")) == true) authBy(AuthWays.TELEGRAM, code)
+                // Consume the delivery before starting an asynchronous, one-time exchange.
+                intent.data = null
+                if (code?.matches(Regex("[a-f0-9]{32}")) == true) telegramAuth.exchange(code)
             }
         } else {
             authCode = prefs.getString("auth_code", null)
             startChatService(authCode)
         }
-    }
-
-    private fun authBy(way: AuthWays, nonce: String?) {
-        val authRoutePart : String = when (way) {
-            AuthWays.TELEGRAM -> "authgram"
-            AuthWays.VK -> "auth"
-        }
-
-        AsyncHttpClient.getDefaultInstance().executeJSONObject(
-                AsyncHttpGet("$WEB_API_ENDPOINT/$authRoutePart/external?code=$nonce"),
-                object : AsyncHttpClient.JSONObjectCallback() {
-                    override fun onCompleted(e: Exception?, source: AsyncHttpResponse?, result: JSONObject) {
-                        val status = try {
-                            result.getInt("status")
-                        } catch (ex: JSONException) {
-                            // ERROR
-                        } catch (ex: NullPointerException) {
-                            // ERROR
-                        }
-
-                        val payload = result.getString("payload")
-                        when (status) {
-                            0 -> {
-                                authCode = payload
-                                setPrefString("auth_code", payload)
-
-                                startChatService(authCode)
-                            }
-                            else -> {
-                                runOnUiThread { AlertDialog.Builder(this@MainActivity)
-                                        .setTitle(R.string.authError)
-                                        .setMessage(getString(R.string.authApiError) + ":\n#$status $payload")
-                                        .show()
-                                }
-                            }
-                        }
-                    }
-                })
     }
 
     private fun startChatService(authCode: String?) {
@@ -305,13 +291,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun restartPlayer(streamType: String = "stream") {
         startPlayer(streamType)
-    }
-
-    private fun setPrefString(key: String, value: String) {
-        with (prefs.edit()) {
-            putString(key, value)
-            apply()
-        }
     }
 
     companion object {

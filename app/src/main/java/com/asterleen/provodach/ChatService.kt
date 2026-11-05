@@ -10,6 +10,7 @@ import com.koushikdutta.async.callback.CompletedCallback
 import com.koushikdutta.async.http.AsyncHttpClient
 import com.koushikdutta.async.http.AsyncHttpClient.WebSocketConnectCallback
 import com.koushikdutta.async.http.WebSocket
+import java.util.concurrent.atomic.AtomicInteger
 
 
 class ChatService (): Service() {
@@ -33,7 +34,8 @@ class ChatService (): Service() {
     var authState: AuthState = AuthState.NONE
     private var myMessagesIds: ArrayList<String> = ArrayList<String>()
     private var socket : WebSocket? = null
-    private var readonlyAttempted : Boolean = false
+    private val connectionGeneration = AtomicInteger()
+    private var historyRequested = false
     private var lastMessageCode : String = ""
 
     override fun onBind(intent: Intent): IBinder {
@@ -46,9 +48,28 @@ class ChatService (): Service() {
 
     override fun onCreate() {
         Log.d(TAG, "Creating Chat service")
-        AsyncHttpClient.getDefaultInstance().websocket(CHAT_SERVER_ADDRESS, "mew", WebSocketConnectCallback { ex, webSocket ->
+        super.onCreate()
+        openConnection()
+    }
+
+    private fun openConnection(readonly: Boolean = false) {
+        val generation = connectionGeneration.incrementAndGet()
+        val client = AsyncHttpClient.getDefaultInstance()
+        client.server.post {
+            if (generation != connectionGeneration.get()) return@post
+            val previous = socket
+            socket = null
+            previous?.close()
+            updateAuthState(AuthState.NONE)
+            client.websocket(CHAT_SERVER_ADDRESS, "mew", WebSocketConnectCallback { ex, webSocket ->
+            if (generation != connectionGeneration.get()) {
+                webSocket?.close()
+                return@WebSocketConnectCallback
+            }
             if (ex != null) {
-                Log.w(TAG, "Socket error: " + ex.message)
+                Log.w(TAG, "Chat connection failed")
+                updateAuthState(AuthState.FAILED)
+                listener?.socketConnectionError("Chat connection failed")
                 return@WebSocketConnectCallback
             }
 
@@ -56,8 +77,7 @@ class ChatService (): Service() {
 
             socket = webSocket
             webSocket.stringCallback = WebSocket.StringCallback { s ->
-                Log.i(TAG, "Received: $s")
-
+                if (generation != connectionGeneration.get()) return@StringCallback
                 listener?.socketRawContent(s)
 
                 val cmd = s.split(" ").toTypedArray()
@@ -65,13 +85,16 @@ class ChatService (): Service() {
                 when (cmd[0]) {
                     "INIT" -> {
                         socketSend("LEVEL $AIRIN_API_LEVEL")
-                        socketSend("CONNECT " + (if (authCode == null || authCode!!.isEmpty()) "READONLY" else authCode) + " #Kiara/" + CLIENT_VERSION)
+                        socketSend("CONNECT " + (if (readonly || authCode.isNullOrEmpty()) "READONLY" else authCode) + " #Kiara/" + CLIENT_VERSION)
                     }
 
                     "AUTH" -> {
                         when (cmd[1]) {
                             "OK", "READONLY" -> {
-                                socketSend("LOG 20 ASC")
+                                if (!historyRequested) {
+                                    socketSend("LOG 20 ASC")
+                                    historyRequested = true
+                                }
 
                                 if (cmd[1] == "READONLY") {
                                     updateAuthState(AuthState.READONLY)
@@ -81,11 +104,11 @@ class ChatService (): Service() {
                                 }
                             }
                             "FAIL" -> {
-                                if (readonlyAttempted) {
+                                if (readonly) {
                                     updateAuthState(AuthState.FAILED, fullText)
                                 } else {
-                                    socketSend("CONNECT READONLY #Kiara/$CLIENT_VERSION")
-                                    readonlyAttempted = true
+                                    // CONNECT is accepted only once on each WebSocket.
+                                    openConnection(readonly = true)
                                 }
 
                             }
@@ -132,9 +155,15 @@ class ChatService (): Service() {
                     }
                 }
             }
-            webSocket.closedCallback = CompletedCallback { }
-        })
-        super.onCreate()
+            webSocket.closedCallback = CompletedCallback {
+                if (generation == connectionGeneration.get()) {
+                    socket = null
+                    updateAuthState(AuthState.FAILED)
+                    listener?.socketClosed()
+                }
+            }
+            })
+        }
     }
 
     private fun serviceCodeToColor(code: String): String {
@@ -162,16 +191,17 @@ class ChatService (): Service() {
     private fun socketSend(data: String) {
         if (socket != null && socket!!.isOpen) {
             socket!!.send(data)
-            Log.i(TAG, "Send: $data")
+            Log.d(TAG, "Sent chat command: " + data.substringBefore(' '))
         }
     }
 
     override fun onDestroy() {
-        if (socket != null && socket!!.isOpen) {
-            socket!!.close()
-            Log.i(TAG, "Socket closed")
+        connectionGeneration.incrementAndGet()
+        AsyncHttpClient.getDefaultInstance().server.post {
+            socket?.close()
+            socket = null
         }
-
+        super.onDestroy()
         Log.d(TAG, "Socket service stopped")
     }
 
@@ -193,7 +223,7 @@ class ChatService (): Service() {
 
     fun reauth(authCode: String) {
         this.authCode = authCode
-        socketSend("CONNECT $authCode #Kiara/$CLIENT_VERSION")
+        openConnection()
     }
 
     companion object {
