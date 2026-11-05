@@ -19,7 +19,6 @@ import com.koushikdutta.async.http.AsyncHttpGet
 import com.koushikdutta.async.http.AsyncHttpResponse
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.regex.Pattern
 import android.content.Intent
 import android.net.Uri
 import androidx.preference.PreferenceManager;
@@ -31,7 +30,6 @@ class MainActivity : AppCompatActivity() {
     private var messagesAdapter: ChatMessageAdapter? = null
     private var authCode: String? = null
     private var messageTextEdit: EditText? = null
-    private val authUrlPattern: Pattern = Pattern.compile("code=([a-z0-9]{32})")
     private lateinit var prefs: SharedPreferences
 
     var chatService : ChatService? = null
@@ -78,16 +76,15 @@ class MainActivity : AppCompatActivity() {
         override fun error(code: Int, text: String) {}
     }
 
-    private val vkAuthActivity = object : VKAuthActivity() {
-        override fun authCodeReady(url: String) {
-            authBy(AuthWays.VK, extractAuthCodeFromURL(url))
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Utils.applySystemInsets(this)
+        supportActionBar?.apply {
+            setDisplayShowTitleEnabled(false)
+            setCustomView(R.layout.actionbar_logo)
+            setDisplayShowCustomEnabled(true)
+        }
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
@@ -156,8 +153,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        if (intent != null)
+        if (intent != null) {
+            this.intent = intent
             processAuthIntent(intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -192,10 +191,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onChatMessagePlaceholderClick(view: View) {
-        val url = "https://t.me/provodach_bot"
-        val i = Intent(Intent.ACTION_VIEW)
-        i.data = Uri.parse(url)
-        startActivity(i)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.auth)
+            .setItems(arrayOf(getString(R.string.auth_via_vk), getString(R.string.auth_via_telegram))) { _, which ->
+                if (which == 0) {
+                    startActivity(Intent(this, VKAuthActivity::class.java))
+                } else {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/provodach_bot")))
+                }
+            }
+            .show()
     }
 
     private fun openSettings() {
@@ -222,19 +227,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun processAuthIntent(intent: Intent) {
-        val intentURI = if (intent.data != null) intent.data.toString() else null
-
-        if (intentURI != null && intentURI.isNotEmpty()) {
-            authBy(AuthWays.TELEGRAM, extractAuthCodeFromURL(intentURI))
+        val uri = intent.data
+        if (uri != null) {
+            val isTelegramCallback = (uri.scheme == "telegram-auth" && uri.host == "provodach" &&
+                uri.path.isNullOrEmpty()) || (uri.scheme == "https" && uri.host == "api.nay.su" &&
+                uri.path == "/airin/authgram")
+            if (isTelegramCallback) {
+                val code = uri.getQueryParameter("code")
+                if (code?.matches(Regex("[a-z0-9]{32}")) == true) authBy(AuthWays.TELEGRAM, code)
+            }
         } else {
-            startChatService(prefs.getString("auth_code", null))
+            authCode = prefs.getString("auth_code", null)
+            startChatService(authCode)
         }
-    }
-
-    private fun extractAuthCodeFromURL(url: String) : String? {
-        val matcher = authUrlPattern.matcher(url)
-
-        return if (matcher.find()) matcher.group(1) else null
     }
 
     private fun authBy(way: AuthWays, nonce: String?) {

@@ -56,9 +56,16 @@
     <string name="authError">Authentication failed</string>
     <string name="message_hint">Enter your message here</string>
     <string name="auth_via_telegram">Authenticate via Telegram</string>
+    <string name="auth_via_vk">Sign in with VK</string>
+    <string name="vk_auth_waiting">Complete sign-in in VK or your browser, then return to the app.</string>
+    <string name="vk_auth_connecting">Connecting to the sign-in server…</string>
+    <string name="vk_auth_browser">Open in browser</string>
+    <string name="vk_auth_no_browser">No browser is available. Install or enable a browser and try again.</string>
+    <string name="vk_auth_expired">The sign-in request has expired. Please try again.</string>
+    <string name="vk_auth_server_update">VK sign-in is not yet available on this server. Please use Telegram for now.</string>
     <string name="auth_via_url">Authenticate via URL</string>
     <string name="authApiError">Error in authentication API</string>
-    <string name="notAuthorized">You are not authorized yet.\nTelegram only is supported for now.\nPress here to open the auth bot...</string>
+    <string name="notAuthorized">You are not signed in.\nTap here to sign in with VK or Telegram.</string>
     <string name="useHLS">Use HLS stream</string>
     <string name="useHLSExplanation">Use HLS stream instead of direct HTTP. Decreases stutters, increases lag</string>
     <string name="settings">Settings</string>

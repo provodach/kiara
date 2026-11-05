@@ -52,9 +52,16 @@
     <string name="authError">Ошибка авторизации</string>
     <string name="message_hint">Вводи сообщение здесь</string>
     <string name="auth_via_telegram">Войти через Telegram</string>
+    <string name="auth_via_vk">Войти через ВК</string>
+    <string name="vk_auth_waiting">Завершите вход в ВК или браузере, затем вернитесь в приложение.</string>
+    <string name="vk_auth_connecting">Подключение к серверу авторизации…</string>
+    <string name="vk_auth_browser">Открыть в браузере</string>
+    <string name="vk_auth_no_browser">Нет доступного браузера. Установите или включите браузер и повторите попытку.</string>
+    <string name="vk_auth_expired">Время ожидания входа истекло. Повторите попытку.</string>
+    <string name="vk_auth_server_update">Вход через ВК пока недоступен на сервере. Используйте Telegram.</string>
     <string name="auth_via_url">Войти по URL</string>
     <string name="authApiError">Ошибка в API авторизации</string>
-    <string name="notAuthorized">Вы не авторизованы. \nСейчас поддерживается только Telegram.\nНажмите здесь, чтобы авторизоваться...</string>
+    <string name="notAuthorized">Вы не авторизованы.\nНажмите здесь, чтобы войти через ВК или Telegram.</string>
     <string name="useHLS">Использовать HLS</string>
     <string name="settings">Настройки</string>
     <string name="userName">Имя</string>

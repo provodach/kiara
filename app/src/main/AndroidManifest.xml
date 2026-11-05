@@ -5,6 +5,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
+    <queries>
+        <package android:name="com.vkontakte.android" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -37,6 +46,23 @@
                     android:host="provodach" />
             </intent-filter>
 
+        </activity>
+        <activity
+            android:name=".ui.VKAuthActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:process=":MainActivity" />
+        <activity
+            android:name=".ui.VKAuthCallbackActivity"
+            android:exported="true"
+            android:process=":MainActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kiara-vk" android:host="auth" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".SettingsActivity"
