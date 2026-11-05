@@ -1,5 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Provoda.ch</string>
+    <string name="radio_name">Радио «Проводач»</string>
+    <string name="radio_track_description">%1$s — %2$s</string>
     <string name="news">Новости</string>
     <string name="chat">Чат</string>
     <string name="waitingForServer" tools:ignore="TypographyEllipsis">Ожидаю ответа сервера...</string>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="radio_backgrounds">
+        <item>@drawable/radio_background_01</item>
+        <item>@drawable/radio_background_02</item>
+        <item>@drawable/radio_background_03</item>
+        <item>@drawable/radio_background_04</item>
+        <item>@drawable/radio_background_05</item>
+        <item>@drawable/radio_background_06</item>
+        <item>@drawable/radio_background_07</item>
+        <item>@drawable/radio_background_08</item>
+        <item>@drawable/radio_background_09</item>
+        <item>@drawable/radio_background_10</item>
+        <item>@drawable/radio_background_11</item>
+        <item>@drawable/radio_background_12</item>
+        <item>@drawable/radio_background_13</item>
+        <item>@drawable/radio_background_14</item>
+        <item>@drawable/radio_background_15</item>
+        <item>@drawable/radio_background_16</item>
+        <item>@drawable/radio_background_17</item>
+        <item>@drawable/radio_background_18</item>
+        <item>@drawable/radio_background_19</item>
+        <item>@drawable/radio_background_20</item>
+        <item>@drawable/radio_background_21</item>
+        <item>@drawable/radio_background_22</item>
+        <item>@drawable/radio_background_23</item>
+        <item>@drawable/radio_background_24</item>
+        <item>@drawable/radio_background_25</item>
+        <item>@drawable/radio_background_26</item>
+        <item>@drawable/radio_background_27</item>
+        <item>@drawable/radio_background_28</item>
+        <item>@drawable/radio_background_29</item>
+        <item>@drawable/radio_background_30</item>
+        <item>@drawable/radio_background_31</item>
+        <item>@drawable/radio_background_32</item>
+        <item>@drawable/radio_background_33</item>
+        <item>@drawable/radio_background_34</item>
+        <item>@drawable/radio_background_35</item>
+        <item>@drawable/radio_background_36</item>
+        <item>@drawable/radio_background_37</item>
+        <item>@drawable/radio_background_38</item>
+        <item>@drawable/radio_background_39</item>
+        <item>@drawable/radio_background_40</item>
+        <item>@drawable/radio_background_41</item>
+        <item>@drawable/radio_background_42</item>
+    </array>
+</resources>
