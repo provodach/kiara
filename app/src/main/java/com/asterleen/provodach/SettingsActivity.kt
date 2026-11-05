@@ -26,6 +26,7 @@ class SettingsActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferen
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        Utils.applySystemInsets(this)
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         prefs.registerOnSharedPreferenceChangeListener(this)
@@ -41,16 +42,16 @@ class SettingsActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferen
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
 
         when (key) {
             "use_hls" -> {
-                val hlsStateIntent = Intent(ACTION_UPDATE_HLS);
+                val hlsStateIntent = Intent(ACTION_UPDATE_HLS).setPackage(packageName);
                 hlsStateIntent.putExtra("use_hls", sharedPreferences.getBoolean(key, false))
                 sendBroadcast(hlsStateIntent)
             }
             "user_name" -> {
-                val userNameIntent = Intent(ACTION_UPDATE_NAME);
+                val userNameIntent = Intent(ACTION_UPDATE_NAME).setPackage(packageName);
                 userNameIntent.putExtra("user_name", sharedPreferences.getString(key, ""))
                 sendBroadcast(userNameIntent)
             }

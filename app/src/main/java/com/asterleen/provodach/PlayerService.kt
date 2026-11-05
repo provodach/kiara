@@ -50,7 +50,7 @@ class PlayerService : Service(), AudioManager.OnAudioFocusChangeListener {
             addAction(ACTION_STATE)
             addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
         }
-        registerReceiver(actionReceiver, filter)
+        Utils.registerPrivateReceiver(this, actionReceiver, filter)
         useHls = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("use_hls", false)
         stream = if (useHls) STREAM_HLS else STREAM
 
@@ -87,6 +87,8 @@ class PlayerService : Service(), AudioManager.OnAudioFocusChangeListener {
     fun play() {
         if (destroyed || notification?.isPlaying == true) return
         resumeOnFocusGain = false
+        // Target 35 requires a foreground service before requesting focus from the background.
+        notification?.setState(PlaybackStateCompat.STATE_BUFFERING)
         if (audioManager.requestAudioFocus(
                 this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN
             ) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED
@@ -100,7 +102,6 @@ class PlayerService : Service(), AudioManager.OnAudioFocusChangeListener {
         val requestGeneration = ++generation
         val url = stream
         val hls = useHls
-        notification?.setState(PlaybackStateCompat.STATE_BUFFERING)
         broadcastState()
         // Opening a network stream must not block media buttons or the service's main thread.
         audioExecutor.execute {

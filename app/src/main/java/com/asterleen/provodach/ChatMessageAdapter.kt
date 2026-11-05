@@ -4,6 +4,8 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.app.Notification
 import android.app.NotificationManager
+import android.app.NotificationChannel
+import android.os.Build
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -72,12 +74,22 @@ class ChatMessageAdapter(context: Context) : ArrayAdapter<ChatMessage?>(context,
 
     /* Действие при нажатии на оповещение */
     private val notificationIntent: PendingIntent = PendingIntent.getActivity(context, 0, Intent(getContext(), MainActivity::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.FLAG_UPDATE_CURRENT or
+                (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0))
 
     /* Callback на случай, если что-то происходит с сообщением. Например, пользователь открыл изображение
      * на весь экран. */
     private fun makeNotification(title: String, content: String) {
-        val notification: Notification = Notification.Builder(context)
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = "provodach_chat"
+            notifyMgr.createNotificationChannel(
+                NotificationChannel(channelId, context.getString(R.string.chat), NotificationManager.IMPORTANCE_DEFAULT)
+            )
+            Notification.Builder(context, channelId)
+        } else {
+            Notification.Builder(context)
+        }
+        val notification: Notification = builder
                 .setContentTitle(title)
                 .setContentText(content)
                 .setSmallIcon(R.mipmap.ic_launcher)

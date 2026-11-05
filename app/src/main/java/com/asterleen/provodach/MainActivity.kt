@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Utils.applySystemInsets(this)
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
@@ -111,7 +112,7 @@ class MainActivity : AppCompatActivity() {
         playerActionFilter.addAction(PlayerService.ACTION_PLAY)
         playerActionFilter.addAction(PlayerService.ACTION_STOP)
         playerActionFilter.addAction(PlayerService.ACTION_TERMINATE)
-        registerReceiver(playerReceiver, playerActionFilter)
+        Utils.registerPrivateReceiver(this, playerReceiver, playerActionFilter)
 
 
         val prefsChangeReceiver = object : BroadcastReceiver() {
@@ -135,7 +136,7 @@ class MainActivity : AppCompatActivity() {
         val prefsActionFilter = IntentFilter()
         prefsActionFilter.addAction(SettingsActivity.ACTION_UPDATE_HLS)
         prefsActionFilter.addAction(SettingsActivity.ACTION_UPDATE_NAME)
-        registerReceiver(prefsChangeReceiver, prefsActionFilter)
+        Utils.registerPrivateReceiver(this, prefsChangeReceiver, prefsActionFilter)
 
         messagesAdapter = ChatMessageAdapter(this@MainActivity)
         messages = findViewById<ListView>(R.id.messages)
@@ -294,7 +295,7 @@ class MainActivity : AppCompatActivity() {
         b.putString("stream", streamType)
         intent.putExtras(b)
 
-        startService(intent)
+        androidx.core.content.ContextCompat.startForegroundService(this, intent)
     }
 
     private fun restartPlayer(streamType: String = "stream") {
