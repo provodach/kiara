@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity() {
 
         val playerReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent) {
-                val playerButton: MenuItem = menu!!.findItem(R.id.appbar_play)
+                val playerButton = menu?.findItem(R.id.appbar_play) ?: return
                 when (intent.action) {
                     PlayerService.ACTION_PLAY -> {
                         playerButton.isChecked = true
@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
                     SettingsActivity.ACTION_UPDATE_HLS -> {
                         prefs.edit().putBoolean("use_hls", intent.extras?.getBoolean("use_hls") == true).apply()
 
-                        val playerButton: MenuItem = menu!!.findItem(R.id.appbar_play)
+                        val playerButton = menu?.findItem(R.id.appbar_play) ?: return
                         if (playerButton.isChecked)
                             restartPlayer(if (intent.extras?.getBoolean("use_hls") == true) "hls" else "stream")
                     }
@@ -161,15 +161,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.chat, menu)
-        sendBroadcast(Intent(PlayerService.ACTION_STATE))
         this.menu = menu
+        sendBroadcast(Intent(PlayerService.ACTION_STATE).setPackage(packageName))
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.appbar_play -> {
-                if (item.isChecked) stopService(Intent(this, PlayerService::class.java)) else
+                if (item.isChecked) startService(Intent(this, PlayerService::class.java).setAction(PlayerService.ACTION_STOP)) else
                     restartPlayer(if (prefs.getBoolean("use_hls", false)) "hls" else "stream")
                 return true
             }
@@ -207,6 +207,7 @@ class MainActivity : AppCompatActivity() {
             val textboxPlaceholder = findViewById<LinearLayout>(R.id.chatMessagePlaceholder)
             val textboxContainer = findViewById<LinearLayout>(R.id.chatMessageBox)
             when (chatService!!.authState) {
+                ChatService.AuthState.NONE -> Unit
                 ChatService.AuthState.FULL -> {
                     textboxPlaceholder.visibility = View.GONE
                     textboxContainer.visibility = View.VISIBLE
@@ -297,8 +298,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restartPlayer(streamType: String = "stream") {
-        val intent = Intent(this, PlayerService::class.java)
-        stopService(intent)
         startPlayer(streamType)
     }
 

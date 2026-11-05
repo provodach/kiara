@@ -28,6 +28,8 @@
 
     <string name="login">Войти</string>
     <string name="player">Проигрыватель</string>
+    <string name="pause_playback">Приостановить</string>
+    <string name="resume_playback">Продолжить</string>
 
     <string name="info">Информация</string>
     <string name="vkErrorTitle">Ошибка ВК</string>

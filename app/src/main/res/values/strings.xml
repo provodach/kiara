@@ -28,6 +28,8 @@
     <string name="loginSummary" tools:ignore="TypographyDashes">Latin and numbers only, 3-20 chars max</string>
     <string name="login">Login</string>
     <string name="player">Player</string>
+    <string name="pause_playback">Pause</string>
+    <string name="resume_playback">Play</string>
 
     <string name="info">Information</string>
     <string name="vkErrorTitle">Internal VK error</string>
